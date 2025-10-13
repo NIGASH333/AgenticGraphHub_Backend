@@ -25,19 +25,27 @@ def check_requirements():
         print("ERROR: Python 3.10+ is required")
         return False
     
-    # Check if .env file exists
-    env_file = Path(".env")
-    if not env_file.exists():
-        print("ERROR: .env file not found")
-        print("   Please copy env_template.txt to .env and configure it")
-        return False
-    
-    # Load environment variables
+    # Load environment variables (from .env file if it exists, or from system env)
     load_dotenv()
+    
+    # Check if we're running in a cloud environment (like Render)
+    is_cloud_env = os.getenv("RENDER") or os.getenv("HEROKU") or os.getenv("RAILWAY")
+    
+    # Check for .env file only in local development
+    if not is_cloud_env:
+        env_file = Path(".env")
+        if not env_file.exists():
+            print("ERROR: .env file not found")
+            print("   Please copy env_template.txt to .env and configure it")
+            return False
     
     # Check OpenAI API key
     if not os.getenv("OPENAI_API_KEY"):
-        print("ERROR: OPENAI_API_KEY not found in .env file")
+        if is_cloud_env:
+            print("ERROR: OPENAI_API_KEY not found in environment variables")
+            print("   Please set OPENAI_API_KEY in your deployment environment")
+        else:
+            print("ERROR: OPENAI_API_KEY not found in .env file")
         return False
     
     print("SUCCESS: All requirements met")
