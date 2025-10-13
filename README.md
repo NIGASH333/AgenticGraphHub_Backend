@@ -692,8 +692,6 @@ For issues and questions:
 
 ## Future Enhancements
 
-- [ ] Support for more document formats (PDF, Word, etc.)
-- [ ] Advanced graph visualization
 - [ ] Multi-language support
 - [ ] Caching layer for improved performance
 - [ ] Authentication and authorization
@@ -709,3 +707,4 @@ All Rights Reserved.
 
 Unauthorized copying, modification, distribution, or use of this software,
 via any medium, is strictly prohibited without the express permission of the author.
+
