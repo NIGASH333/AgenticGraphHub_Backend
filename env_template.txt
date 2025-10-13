@@ -1,0 +1,16 @@
+# OpenAI Configuration
+OPENAI_API_KEY=your_openai_api_key_here
+
+# Neo4j Configuration (optional - will fallback to NetworkX if not provided)
+NEO4J_URI=bolt://localhost:7687
+NEO4J_USERNAME=neo4j
+NEO4J_PASSWORD=your_neo4j_password_here
+
+# Application Configuration
+APP_HOST=0.0.0.0
+APP_PORT=8000
+DEBUG=True
+
+# Data Configuration
+DATA_DIR=./data
+FAISS_INDEX_DIR=./data/faiss_index

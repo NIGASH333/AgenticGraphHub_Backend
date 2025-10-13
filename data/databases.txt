@@ -1,0 +1,66 @@
+Database Systems: SQL vs NoSQL
+
+Databases are organized collections of data that can be easily accessed, managed, and updated. They are essential for storing and retrieving information in applications.
+
+SQL Databases (Relational):
+SQL (Structured Query Language) databases store data in tables with predefined schemas. They follow ACID properties:
+- Atomicity: All operations in a transaction succeed or all fail
+- Consistency: Database remains in a valid state
+- Isolation: Concurrent transactions don't interfere
+- Durability: Committed data persists even after system failures
+
+Popular SQL databases include:
+- MySQL: Open-source, widely used for web applications
+- PostgreSQL: Advanced open-source database with extensibility
+- Oracle: Enterprise-grade commercial database
+- SQL Server: Microsoft's enterprise database solution
+- SQLite: Lightweight, file-based database
+
+SQL databases excel at:
+- Complex queries and joins
+- Data integrity and consistency
+- ACID transactions
+- Structured data with relationships
+- Reporting and analytics
+
+NoSQL Databases (Non-relational):
+NoSQL databases store data in flexible, non-tabular formats. They prioritize:
+- Scalability and performance
+- Flexible schemas
+- Horizontal scaling
+- Fast read/write operations
+
+Types of NoSQL databases:
+- Document databases (MongoDB, CouchDB): Store data as documents
+- Key-value stores (Redis, DynamoDB): Simple key-value pairs
+- Column-family stores (Cassandra, HBase): Store data in columns
+- Graph databases (Neo4j, Amazon Neptune): Store entities and relationships
+
+NoSQL databases excel at:
+- Large-scale applications
+- Unstructured or semi-structured data
+- High-velocity data ingestion
+- Real-time applications
+- Microservices architectures
+
+When to choose SQL:
+- Complex relationships between data
+- ACID compliance is critical
+- Mature ecosystem and tools
+- Structured data with consistent schema
+- Complex reporting requirements
+
+When to choose NoSQL:
+- Rapid development and iteration
+- Large-scale data processing
+- Flexible schema requirements
+- High-performance read/write operations
+- Cloud-native applications
+
+Hybrid approaches are common, with many applications using both SQL and NoSQL databases for different purposes. The choice depends on specific requirements, data characteristics, and scalability needs.
+
+Modern database trends include:
+- Cloud-native databases (AWS RDS, Azure SQL, Google Cloud SQL)
+- Serverless databases (AWS Aurora Serverless, PlanetScale)
+- Multi-model databases supporting multiple data types
+- Database-as-a-Service (DBaaS) offerings

@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agentic Graph RAG - Ontology Editor</title>
+    <script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        .main-content {
+            display: flex;
+            height: 600px;
+        }
+        .sidebar {
+            width: 300px;
+            background: #f8f9fa;
+            border-right: 1px solid #dee2e6;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        .graph-container {
+            flex: 1;
+            position: relative;
+        }
+        #ontology-graph {
+            width: 100%;
+            height: 100%;
+            border: 1px solid #dee2e6;
+        }
+        .entity-form, .relationship-form {
+            background: white;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+            border: 1px solid #dee2e6;
+        }
+        .form-group {
+            margin-bottom: 10px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-right: 10px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .btn-danger {
+            background: #dc3545;
+        }
+        .btn-danger:hover {
+            background: #c82333;
+        }
+        .btn-success {
+            background: #28a745;
+        }
+        .btn-success:hover {
+            background: #218838;
+        }
+        .entity-list {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 10px;
+            background: white;
+        }
+        .entity-item {
+            padding: 5px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+        }
+        .entity-item:hover {
+            background: #f8f9fa;
+        }
+        .entity-item.selected {
+            background: #e3f2fd;
+        }
+        .controls {
+            padding: 15px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+        }
+        .status {
+            padding: 10px;
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            display: none;
+        }
+        .error {
+            background: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Agentic Graph RAG - Ontology Editor</h1>
+            <p>Visual ontology management and knowledge graph construction</p>
+        </div>
+        
+        <div class="status" id="status"></div>
+        
+        <div class="controls">
+            <button onclick="loadOntology()">Load Ontology</button>
+            <button onclick="saveOntology()" class="btn-success">Save Ontology</button>
+            <button onclick="exportOntology()">Export</button>
+            <button onclick="importOntology()">Import</button>
+            <button onclick="clearGraph()" class="btn-danger">Clear</button>
+        </div>
+        
+        <div class="main-content">
+            <div class="sidebar">
+                <div class="entity-form">
+                    <h3>Add Entity</h3>
+                    <div class="form-group">
+                        <label>Name:</label>
+                        <input type="text" id="entity-name" placeholder="Entity name">
+                    </div>
+                    <div class="form-group">
+                        <label>Type:</label>
+                        <select id="entity-type">
+                            <option value="PERSON">Person</option>
+                            <option value="ORGANIZATION">Organization</option>
+                            <option value="CONCEPT">Concept</option>
+                            <option value="LOCATION">Location</option>
+                            <option value="EVENT">Event</option>
+                            <option value="TECHNOLOGY">Technology</option>
+                            <option value="OTHER">Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Attributes (JSON):</label>
+                        <textarea id="entity-attributes" rows="3" placeholder='{"key": "value"}'></textarea>
+                    </div>
+                    <button onclick="addEntity()">Add Entity</button>
+                </div>
+                
+                <div class="relationship-form">
+                    <h3>Add Relationship</h3>
+                    <div class="form-group">
+                        <label>Source Entity:</label>
+                        <select id="source-entity">
+                            <option value="">Select source...</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Target Entity:</label>
+                        <select id="target-entity">
+                            <option value="">Select target...</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Relationship Type:</label>
+                        <input type="text" id="relationship-type" placeholder="e.g., created_by">
+                    </div>
+                    <div class="form-group">
+                        <label>Attributes (JSON):</label>
+                        <textarea id="relationship-attributes" rows="2" placeholder='{"key": "value"}'></textarea>
+                    </div>
+                    <button onclick="addRelationship()">Add Relationship</button>
+                </div>
+                
+                <div class="entity-list">
+                    <h4>Entities</h4>
+                    <div id="entities-list"></div>
+                </div>
+            </div>
+            
+            <div class="graph-container">
+                <div id="ontology-graph"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let network;
+        let nodes, edges;
+        let selectedNode = null;
+        let selectedEdge = null;
+
+        // Initialize the network
+        function initNetwork() {
+            const container = document.getElementById('ontology-graph');
+            const data = { nodes: nodes, edges: edges };
+            const options = {
+                nodes: {
+                    shape: 'dot',
+                    size: 20,
+                    font: { size: 14 },
+                    borderWidth: 2,
+                    shadow: true
+                },
+                edges: {
+                    width: 2,
+                    color: { inherit: 'from' },
+                    smooth: { type: 'continuous' },
+                    font: { size: 12, align: 'middle' }
+                },
+                physics: {
+                    enabled: true,
+                    stabilization: { iterations: 100 }
+                },
+                interaction: {
+                    dragNodes: true,
+                    dragView: true,
+                    zoomView: true
+                }
+            };
+            
+            network = new vis.Network(container, data, options);
+            
+            // Event listeners
+            network.on("selectNode", function (params) {
+                selectedNode = params.nodes[0];
+                updateEntitySelection();
+            });
+            
+            network.on("selectEdge", function (params) {
+                selectedEdge = params.edges[0];
+            });
+            
+            network.on("deselectNode", function () {
+                selectedNode = null;
+                updateEntitySelection();
+            });
+        }
+
+        // Load ontology from server
+        async function loadOntology() {
+            try {
+                showStatus('Loading ontology...', 'info');
+                const response = await fetch('/graph/data');
+                const data = await response.json();
+                
+                // Convert to vis.js format
+                const visNodes = data.nodes.map((node, index) => ({
+                    id: index,
+                    label: node.name,
+                    group: node.type,
+                    title: `${node.name} (${node.type})\nAttributes: ${JSON.stringify(node.attributes)}`
+                }));
+                
+                const visEdges = data.edges.map((edge, index) => ({
+                    id: index,
+                    from: data.nodes.findIndex(n => n.name === edge.source),
+                    to: data.nodes.findIndex(n => n.name === edge.target),
+                    label: edge.relation,
+                    title: `Relationship: ${edge.relation}\nAttributes: ${JSON.stringify(edge.attributes)}`
+                }));
+                
+                nodes = new vis.DataSet(visNodes);
+                edges = new vis.DataSet(visEdges);
+                
+                initNetwork();
+                updateEntityDropdowns();
+                updateEntitiesList();
+                showStatus('Ontology loaded successfully!', 'success');
+            } catch (error) {
+                showStatus('Error loading ontology: ' + error.message, 'error');
+            }
+        }
+
+        // Save ontology to server
+        async function saveOntology() {
+            try {
+                showStatus('Saving ontology...', 'info');
+                
+                // Convert vis.js data back to server format
+                const serverNodes = nodes.get().map(node => ({
+                    name: node.label,
+                    type: node.group,
+                    attributes: JSON.parse(node.title.split('Attributes: ')[1] || '{}')
+                }));
+                
+                const serverEdges = edges.get().map(edge => {
+                    const fromNode = nodes.get(edge.from);
+                    const toNode = nodes.get(edge.to);
+                    return {
+                        source: fromNode.label,
+                        target: toNode.label,
+                        relation: edge.label,
+                        attributes: JSON.parse(edge.title.split('Attributes: ')[1] || '{}')
+                    };
+                });
+                
+                const response = await fetch('/ontology/save', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        nodes: serverNodes,
+                        edges: serverEdges
+                    })
+                });
+                
+                if (response.ok) {
+                    showStatus('Ontology saved successfully!', 'success');
+                } else {
+                    throw new Error('Failed to save ontology');
+                }
+            } catch (error) {
+                showStatus('Error saving ontology: ' + error.message, 'error');
+            }
+        }
+
+        // Add new entity
+        function addEntity() {
+            const name = document.getElementById('entity-name').value;
+            const type = document.getElementById('entity-type').value;
+            const attributes = document.getElementById('entity-attributes').value;
+            
+            if (!name) {
+                showStatus('Please enter entity name', 'error');
+                return;
+            }
+            
+            try {
+                const attrs = attributes ? JSON.parse(attributes) : {};
+                const nodeId = nodes.length;
+                
+                nodes.add({
+                    id: nodeId,
+                    label: name,
+                    group: type,
+                    title: `${name} (${type})\nAttributes: ${JSON.stringify(attrs)}`
+                });
+                
+                // Clear form
+                document.getElementById('entity-name').value = '';
+                document.getElementById('entity-attributes').value = '';
+                
+                updateEntityDropdowns();
+                updateEntitiesList();
+                showStatus('Entity added successfully!', 'success');
+            } catch (error) {
+                showStatus('Invalid JSON in attributes', 'error');
+            }
+        }
+
+        // Add new relationship
+        function addRelationship() {
+            const source = document.getElementById('source-entity').value;
+            const target = document.getElementById('target-entity').value;
+            const relation = document.getElementById('relationship-type').value;
+            const attributes = document.getElementById('relationship-attributes').value;
+            
+            if (!source || !target || !relation) {
+                showStatus('Please fill all relationship fields', 'error');
+                return;
+            }
+            
+            if (source === target) {
+                showStatus('Source and target cannot be the same', 'error');
+                return;
+            }
+            
+            try {
+                const attrs = attributes ? JSON.parse(attributes) : {};
+                const sourceNode = nodes.get().find(n => n.label === source);
+                const targetNode = nodes.get().find(n => n.label === target);
+                
+                if (!sourceNode || !targetNode) {
+                    showStatus('Selected entities not found', 'error');
+                    return;
+                }
+                
+                edges.add({
+                    from: sourceNode.id,
+                    to: targetNode.id,
+                    label: relation,
+                    title: `Relationship: ${relation}\nAttributes: ${JSON.stringify(attrs)}`
+                });
+                
+                // Clear form
+                document.getElementById('source-entity').value = '';
+                document.getElementById('target-entity').value = '';
+                document.getElementById('relationship-type').value = '';
+                document.getElementById('relationship-attributes').value = '';
+                
+                showStatus('Relationship added successfully!', 'success');
+            } catch (error) {
+                showStatus('Invalid JSON in attributes', 'error');
+            }
+        }
+
+        // Update entity dropdowns
+        function updateEntityDropdowns() {
+            const sourceSelect = document.getElementById('source-entity');
+            const targetSelect = document.getElementById('target-entity');
+            
+            sourceSelect.innerHTML = '<option value="">Select source...</option>';
+            targetSelect.innerHTML = '<option value="">Select target...</option>';
+            
+            nodes.get().forEach(node => {
+                const option = `<option value="${node.label}">${node.label}</option>`;
+                sourceSelect.innerHTML += option;
+                targetSelect.innerHTML += option;
+            });
+        }
+
+        // Update entities list
+        function updateEntitiesList() {
+            const list = document.getElementById('entities-list');
+            list.innerHTML = '';
+            
+            nodes.get().forEach(node => {
+                const item = document.createElement('div');
+                item.className = 'entity-item';
+                item.textContent = `${node.label} (${node.group})`;
+                item.onclick = () => selectEntity(node.id);
+                list.appendChild(item);
+            });
+        }
+
+        // Select entity
+        function selectEntity(nodeId) {
+            network.selectNodes([nodeId]);
+            selectedNode = nodeId;
+            updateEntitySelection();
+        }
+
+        // Update entity selection
+        function updateEntitySelection() {
+            const items = document.querySelectorAll('.entity-item');
+            items.forEach(item => item.classList.remove('selected'));
+            
+            if (selectedNode !== null) {
+                const selectedItem = Array.from(items).find(item => 
+                    item.textContent.includes(nodes.get(selectedNode).label)
+                );
+                if (selectedItem) {
+                    selectedItem.classList.add('selected');
+                }
+            }
+        }
+
+        // Clear graph
+        function clearGraph() {
+            if (confirm('Are you sure you want to clear the entire graph?')) {
+                nodes.clear();
+                edges.clear();
+                updateEntityDropdowns();
+                updateEntitiesList();
+                showStatus('Graph cleared', 'info');
+            }
+        }
+
+        // Export ontology
+        function exportOntology() {
+            const data = {
+                nodes: nodes.get(),
+                edges: edges.get()
+            };
+            const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'ontology.json';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // Import ontology
+        function importOntology() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            input.onchange = (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        try {
+                            const data = JSON.parse(e.target.result);
+                            nodes.clear();
+                            edges.clear();
+                            nodes.add(data.nodes);
+                            edges.add(data.edges);
+                            updateEntityDropdowns();
+                            updateEntitiesList();
+                            showStatus('Ontology imported successfully!', 'success');
+                        } catch (error) {
+                            showStatus('Invalid JSON file', 'error');
+                        }
+                    };
+                    reader.readAsText(file);
+                }
+            };
+            input.click();
+        }
+
+        // Show status message
+        function showStatus(message, type) {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.className = `status ${type}`;
+            status.style.display = 'block';
+            setTimeout(() => {
+                status.style.display = 'none';
+            }, 3000);
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            nodes = new vis.DataSet([]);
+            edges = new vis.DataSet([]);
+            initNetwork();
+            loadOntology();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,17 @@
+fastapi>=0.100.0
+uvicorn>=0.20.0
+langchain>=0.1.0
+langchain-openai>=0.1.0
+openai>=1.10.0
+faiss-cpu>=1.7.0
+neo4j>=5.0.0
+networkx>=3.0.0
+python-dotenv>=1.0.0
+pandas>=2.0.0
+pydantic>=2.0.0
+pypdf2>=3.0.0
+python-multipart>=0.0.5
+aiofiles>=23.0.0
+numpy<2.0.0,>=1.24.0
+tiktoken>=0.5.2
+vis-network>=9.1.0

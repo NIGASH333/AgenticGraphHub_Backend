@@ -1,0 +1,13 @@
+
+Artificial Intelligence (AI) is a branch of computer science that aims to create intelligent machines.
+
+Machine Learning is a subset of AI that enables computers to learn without being explicitly programmed.
+
+Deep Learning is a subset of machine learning that uses neural networks with multiple layers.
+
+Natural Language Processing (NLP) is a field of AI that focuses on the interaction between computers and human language.
+
+Computer Vision is an AI field that enables computers to interpret and understand visual information from the world.
+
+These AI technologies work together to create intelligent systems that can perform complex tasks.
+                

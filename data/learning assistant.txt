@@ -1,0 +1,13 @@
+learning assistant
+1 audio > listen without internet 
+save audio
+validate audio (when internet available)
+if validated as correct, add to the local database
+if validated as wrong, then give user a chance to give correct voice to that audio in that language
+if none of these 2 , then delete the audio lets say after 100 uncategorized recording
+
+2 duolingo data model > learning , forgetting curve , daily reminders etc and capture response , stats , probability which path would help the user learn that subject fastest
+
+3 from a given text create the question answers format for duolingo , when internet is not available , keep the given text in database and add the question answers format
+using a > internet
+using b > without internet

@@ -1,0 +1,114 @@
+[
+  {
+    "text": "Artificial Intelligence (AI) and Machine Learning (ML) - Full Overview\n======================================================================\n1. INTRODUCTION TO ARTIFICIAL INTELLIGENCE (AI)\n------------------------------------------------\nArtificial Intelligence (AI) is the simulation of human intelligence in machines\nthat are designed to think and act like humans. AI enables machines to perform tasks\nthat typically require human intelligence such as reasoning, problem-solving, learning,\nperception, and understanding language.\nAI is used in various fields like healthcare, finance, education, marketing, cybersecurity,\nand robotics. Its ultimate goal is to create systems that can function autonomously and\nmake intelligent decisions without human intervention.\n---\n2. TYPES OF ARTIFICIAL INTELLIGENCE\n-----------------------------------\nAI can be categorized based on capability and functionality.\nA. Based on Capability:",
+    "chunk_index": 0,
+    "document_metadata": {
+      "source_file": "ai.txt"
+    },
+    "vector_id": 0
+  },
+  {
+    "text": "---\n2. TYPES OF ARTIFICIAL INTELLIGENCE\n-----------------------------------\nAI can be categorized based on capability and functionality.\nA. Based on Capability:\n   1. **Narrow AI (Weak AI):** Specialized in one task (e.g., virtual assistants like Siri, Alexa).\n   2. **General AI (Strong AI):** Can perform any intellectual task that a human can.\n   3. **Super AI:** Surpasses human intelligence (currently theoretical).\nB. Based on Functionality:\n   1. **Reactive Machines:** No memory; reacts to specific inputs (e.g., IBM’s Deep Blue).\n   2. **Limited Memory:** Can learn from past experiences (e.g., self-driving cars).\n   3. **Theory of Mind:** Machines understand emotions and human needs (in development).\n   4. **Self-aware AI:** Machines with consciousness and awareness (still hypothetical).\n---\n3. MACHINE LEARNING (ML)\n------------------------\nMachine Learning is a subset of AI that enables systems to learn and improve from experience",
+    "chunk_index": 1,
+    "document_metadata": {
+      "source_file": "ai.txt"
+    },
+    "vector_id": 1
+  },
+  {
+    "text": "---\n3. MACHINE LEARNING (ML)\n------------------------\nMachine Learning is a subset of AI that enables systems to learn and improve from experience\nwithout being explicitly programmed. ML uses algorithms to identify patterns in data and make\npredictions or decisions.\nFor example, ML powers spam email filters, recommendation systems (like Netflix), and credit\nfraud detection systems.\n---\n4. TYPES OF MACHINE LEARNING\n-----------------------------\n1. **Supervised Learning:**\n   - The model is trained on labeled data (input and output are known).\n   - Example algorithms: Linear Regression, Decision Trees, Random Forest, SVM.\n   - Applications: Spam detection, price prediction.\n2. **Unsupervised Learning:**\n   - The model learns from unlabeled data (output not provided).\n   - Example algorithms: K-Means Clustering, PCA, Association Rules.\n   - Applications: Customer segmentation, anomaly detection.\n3. **Semi-supervised Learning:**\n   - Combination of labeled and unlabeled data.",
+    "chunk_index": 2,
+    "document_metadata": {
+      "source_file": "ai.txt"
+    },
+    "vector_id": 2
+  },
+  {
+    "text": "- Applications: Customer segmentation, anomaly detection.\n3. **Semi-supervised Learning:**\n   - Combination of labeled and unlabeled data.\n   - Used when labeling data is expensive or time-consuming.\n4. **Reinforcement Learning:**\n   - The model learns by interacting with the environment and receiving rewards or penalties.\n   - Example: AlphaGo, self-driving cars, robotics control.\n---\n5. DEEP LEARNING (DL)\n----------------------\nDeep Learning is a specialized branch of ML inspired by the human brain’s structure — neural networks.\nIt uses multiple layers of artificial neurons to process large amounts of data and extract complex patterns.\n- Common Architectures:\n  - Convolutional Neural Networks (CNNs) – for image recognition.\n  - Recurrent Neural Networks (RNNs) – for sequential data like speech and text.\n  - Generative Adversarial Networks (GANs) – for generating synthetic data.\n---\n6. KEY ALGORITHMS IN AI AND ML\n-------------------------------\n- Linear & Logistic Regression",
+    "chunk_index": 3,
+    "document_metadata": {
+      "source_file": "ai.txt"
+    },
+    "vector_id": 3
+  },
+  {
+    "text": "- Generative Adversarial Networks (GANs) – for generating synthetic data.\n---\n6. KEY ALGORITHMS IN AI AND ML\n-------------------------------\n- Linear & Logistic Regression\n- Decision Trees & Random Forests\n- Support Vector Machines (SVM)\n- K-Nearest Neighbors (KNN)\n- Naive Bayes Classifier\n- Gradient Boosting (XGBoost, CatBoost, LightGBM)\n- Neural Networks (ANN, CNN, RNN, LSTM, Transformer)\n---\n7. TOOLS AND LIBRARIES\n-----------------------\n**Programming Languages:** Python, R, Java, Julia, C++  \n**Frameworks & Libraries:**  \n- TensorFlow, PyTorch, Scikit-learn, Keras, OpenCV  \n- Pandas, NumPy, Matplotlib for data analysis and visualization\n**Platforms:** Google Cloud AI, AWS AI, Microsoft Azure AI, IBM Watson\n---\n8. APPLICATIONS OF AI AND ML\n-----------------------------\n- **Healthcare:** Disease detection, medical imaging, drug discovery.\n- **Finance:** Fraud detection, algorithmic trading, credit scoring.",
+    "chunk_index": 4,
+    "document_metadata": {
+      "source_file": "ai.txt"
+    },
+    "vector_id": 4
+  },
+  {
+    "text": "8. APPLICATIONS OF AI AND ML\n-----------------------------\n- **Healthcare:** Disease detection, medical imaging, drug discovery.\n- **Finance:** Fraud detection, algorithmic trading, credit scoring.\n- **Retail:** Recommendation systems, customer analytics, inventory management.\n- **Transportation:** Self-driving vehicles, route optimization.\n- **Cybersecurity:** Threat detection, anomaly monitoring.\n- **Education:** Adaptive learning platforms, plagiarism detection.\n- **Entertainment:** Personalized content, chatbots, virtual assistants.\n---\n9. CAREER PATHS IN AI & ML\n---------------------------\nCommon roles:\n- AI Engineer\n- Machine Learning Engineer\n- Data Scientist\n- NLP Engineer\n- Computer Vision Engineer\n- Research Scientist\n**Required Skills:**\n- Strong Python programming\n- Understanding of statistics, probability, and linear algebra\n- Experience with TensorFlow/PyTorch\n- Knowledge of cloud computing platforms (AWS, GCP, Azure)",
+    "chunk_index": 5,
+    "document_metadata": {
+      "source_file": "ai.txt"
+    },
+    "vector_id": 5
+  },
+  {
+    "text": "- Strong Python programming\n- Understanding of statistics, probability, and linear algebra\n- Experience with TensorFlow/PyTorch\n- Knowledge of cloud computing platforms (AWS, GCP, Azure)\n- Familiarity with data preprocessing and model deployment\n---\n10. FUTURE OF AI AND ML\n------------------------\nAI and ML are shaping the future with advancements in automation, healthcare, robotics,\nautonomous vehicles, and personalized experiences. Emerging fields like Explainable AI (XAI),\nAI Ethics, and Edge AI are becoming critical to ensure responsible and efficient AI usage.\n---\n11. CONCLUSION\n---------------\nArtificial Intelligence and Machine Learning are transforming the world by enabling intelligent\nautomation, faster decision-making, and innovation across all sectors. The continuous evolution of\nAI and ML holds immense potential to revolutionize how humans interact with technology and data.\n======================================================================\nEnd of Document",
+    "chunk_index": 6,
+    "document_metadata": {
+      "source_file": "ai.txt"
+    },
+    "vector_id": 6
+  },
+  {
+    "text": "Database Systems: SQL vs NoSQL\nDatabases are organized collections of data that can be easily accessed, managed, and updated. They are essential for storing and retrieving information in applications.\nSQL Databases (Relational):\nSQL (Structured Query Language) databases store data in tables with predefined schemas. They follow ACID properties:\n- Atomicity: All operations in a transaction succeed or all fail\n- Consistency: Database remains in a valid state\n- Isolation: Concurrent transactions don't interfere\n- Durability: Committed data persists even after system failures\nPopular SQL databases include:\n- MySQL: Open-source, widely used for web applications\n- PostgreSQL: Advanced open-source database with extensibility\n- Oracle: Enterprise-grade commercial database\n- SQL Server: Microsoft's enterprise database solution\n- SQLite: Lightweight, file-based database\nSQL databases excel at:\n- Complex queries and joins\n- Data integrity and consistency\n- ACID transactions",
+    "chunk_index": 0,
+    "document_metadata": {
+      "source_file": "databases.txt"
+    },
+    "vector_id": 7
+  },
+  {
+    "text": "- SQLite: Lightweight, file-based database\nSQL databases excel at:\n- Complex queries and joins\n- Data integrity and consistency\n- ACID transactions\n- Structured data with relationships\n- Reporting and analytics\nNoSQL Databases (Non-relational):\nNoSQL databases store data in flexible, non-tabular formats. They prioritize:\n- Scalability and performance\n- Flexible schemas\n- Horizontal scaling\n- Fast read/write operations\nTypes of NoSQL databases:\n- Document databases (MongoDB, CouchDB): Store data as documents\n- Key-value stores (Redis, DynamoDB): Simple key-value pairs\n- Column-family stores (Cassandra, HBase): Store data in columns\n- Graph databases (Neo4j, Amazon Neptune): Store entities and relationships\nNoSQL databases excel at:\n- Large-scale applications\n- Unstructured or semi-structured data\n- High-velocity data ingestion\n- Real-time applications\n- Microservices architectures\nWhen to choose SQL:\n- Complex relationships between data\n- ACID compliance is critical",
+    "chunk_index": 1,
+    "document_metadata": {
+      "source_file": "databases.txt"
+    },
+    "vector_id": 8
+  },
+  {
+    "text": "- High-velocity data ingestion\n- Real-time applications\n- Microservices architectures\nWhen to choose SQL:\n- Complex relationships between data\n- ACID compliance is critical\n- Mature ecosystem and tools\n- Structured data with consistent schema\n- Complex reporting requirements\nWhen to choose NoSQL:\n- Rapid development and iteration\n- Large-scale data processing\n- Flexible schema requirements\n- High-performance read/write operations\n- Cloud-native applications\nHybrid approaches are common, with many applications using both SQL and NoSQL databases for different purposes. The choice depends on specific requirements, data characteristics, and scalability needs.\nModern database trends include:\n- Cloud-native databases (AWS RDS, Azure SQL, Google Cloud SQL)\n- Serverless databases (AWS Aurora Serverless, PlanetScale)\n- Multi-model databases supporting multiple data types\n- Database-as-a-Service (DBaaS) offerings",
+    "chunk_index": 2,
+    "document_metadata": {
+      "source_file": "databases.txt"
+    },
+    "vector_id": 9
+  },
+  {
+    "text": "learning assistant\n1 audio > listen without internet \nsave audio\nvalidate audio (when internet available)\nif validated as correct, add to the local database\nif validated as wrong, then give user a chance to give correct voice to that audio in that language\nif none of these 2 , then delete the audio lets say after 100 uncategorized recording\n2 duolingo data model > learning , forgetting curve , daily reminders etc and capture response , stats , probability which path would help the user learn that subject fastest\n3 from a given text create the question answers format for duolingo , when internet is not available , keep the given text in database and add the question answers format\nusing a > internet\nusing b > without internet",
+    "chunk_index": 0,
+    "document_metadata": {
+      "source_file": "learning assistant.txt"
+    },
+    "vector_id": 10
+  },
+  {
+    "text": "Python Programming Language Overview\nPython is a high-level, interpreted programming language created by Guido van Rossum and first released in 1991. Python's design philosophy emphasizes code readability with its notable use of significant whitespace.\nKey Features:\n- Simple and easy to learn syntax\n- Interpreted language (no compilation needed)\n- Cross-platform compatibility\n- Large standard library\n- Dynamic typing\n- Object-oriented programming support\n- Functional programming capabilities\nPython was created by Guido van Rossum at Centrum Wiskunde & Informatica (CWI) in the Netherlands. The name \"Python\" comes from the British comedy group Monty Python, not the snake. Van Rossum wanted a short, unique, and slightly mysterious name for his language.\nMajor Python versions include Python 2.x (discontinued in 2020) and Python 3.x (current). Python 3 introduced many improvements including better Unicode support, print as a function, and improved division operations.",
+    "chunk_index": 0,
+    "document_metadata": {
+      "source_file": "python.txt"
+    },
+    "vector_id": 11
+  },
+  {
+    "text": "Python is widely used in:\n- Web development (Django, Flask)\n- Data science and analytics (Pandas, NumPy, Matplotlib)\n- Machine learning and AI (TensorFlow, PyTorch, Scikit-learn)\n- Scientific computing\n- Automation and scripting\n- Game development (Pygame)\nThe Python Software Foundation (PSF) manages the development and distribution of Python. Python follows the principle \"There should be one obvious way to do it\" (The Zen of Python).\nPython's popularity has grown significantly due to its simplicity, versatility, and strong community support. It's often recommended as a first programming language for beginners due to its readable syntax and gentle learning curve.",
+    "chunk_index": 1,
+    "document_metadata": {
+      "source_file": "python.txt"
+    },
+    "vector_id": 12
+  },
+  {
+    "text": "Artificial Intelligence (AI) is a branch of computer science that aims to create intelligent machines.\nMachine Learning is a subset of AI that enables computers to learn without being explicitly programmed.\nDeep Learning is a subset of machine learning that uses neural networks with multiple layers.\nNatural Language Processing (NLP) is a field of AI that focuses on the interaction between computers and human language.\nComputer Vision is an AI field that enables computers to interpret and understand visual information from the world.\nThese AI technologies work together to create intelligent systems that can perform complex tasks.",
+    "chunk_index": 0,
+    "document_metadata": {
+      "source_file": "sample_ai.txt"
+    },
+    "vector_id": 13
+  }
+]
