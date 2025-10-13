@@ -21,6 +21,9 @@ def validate_environment():
     issues = []
     warnings = []
     
+    # Check if we're running in a cloud environment
+    is_cloud_env = os.getenv("RENDER") or os.getenv("HEROKU") or os.getenv("RAILWAY")
+    
     # Check required variables
     required_vars = {
         "OPENAI_API_KEY": "OpenAI API key for LLM operations"
@@ -29,7 +32,10 @@ def validate_environment():
     for var, description in required_vars.items():
         value = os.getenv(var)
         if not value:
-            issues.append(f"ERROR: {var}: {description} (REQUIRED)")
+            if is_cloud_env:
+                issues.append(f"ERROR: {var}: {description} (REQUIRED - set in deployment environment)")
+            else:
+                issues.append(f"ERROR: {var}: {description} (REQUIRED - set in .env file)")
         elif var == "OPENAI_API_KEY" and not value.startswith("sk-"):
             warnings.append(f"WARNING: {var}: Value doesn't look like a valid OpenAI API key")
         else:
