@@ -1,17 +1,26 @@
-fastapi>=0.100.0
-uvicorn>=0.20.0
-langchain>=0.1.0
-langchain-openai>=0.1.0
-openai>=1.10.0
-faiss-cpu>=1.7.0
-neo4j>=5.0.0
-networkx>=3.0.0
-python-dotenv>=1.0.0
-pandas>=2.0.0
-pydantic>=2.0.0
-pypdf2>=3.0.0
-python-multipart>=0.0.5
-aiofiles>=23.0.0
-numpy<2.0.0,>=1.24.0
-tiktoken>=0.5.2
-vis-network>=9.1.0
+# Core FastAPI dependencies
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+
+# AI/ML dependencies
+langchain==0.3.27
+langchain-openai==0.3.35
+openai==2.3.0
+faiss-cpu==1.12.0
+
+# Database dependencies
+neo4j==6.0.2
+networkx==3.5
+
+# Utility dependencies
+python-dotenv==1.1.1
+pandas==2.3.3
+pydantic==2.12.0
+pypdf2==3.0.1
+python-multipart==0.0.20
+aiofiles==25.1.0
+numpy==1.26.4
+tiktoken==0.12.0
+
+# Production dependencies
+gunicorn==21.2.0
