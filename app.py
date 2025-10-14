@@ -379,16 +379,23 @@ async def get_graph_data():
         if graph_builder.use_neo4j:
             # Export from Neo4j
             with graph_builder.neo4j_driver.session() as session:
-                # Get all nodes
-                nodes_result = session.run("MATCH (n) RETURN n.name as name, n.type as type, n.attributes as attributes")
+                # Get all nodes - handle missing attributes gracefully
+                nodes_result = session.run("""
+                    MATCH (n) 
+                    RETURN n.name as name, 
+                           n.type as type, 
+                           CASE WHEN EXISTS(n.attributes) THEN n.attributes ELSE {} END as attributes
+                """)
                 nodes = [{"name": record["name"], "type": record["type"], "attributes": record["attributes"]} 
                         for record in nodes_result]
                 
-                # Get all relationships
+                # Get all relationships - handle missing attributes gracefully
                 rels_result = session.run("""
                     MATCH (source:Entity)-[r:RELATION]->(target:Entity)
-                    RETURN source.name as source, target.name as target, 
-                           r.relation_type as relation, r.attributes as attributes
+                    RETURN source.name as source, 
+                           target.name as target, 
+                           r.relation_type as relation, 
+                           CASE WHEN EXISTS(r.attributes) THEN r.attributes ELSE {} END as attributes
                 """)
                 relationships = [{"source": record["source"], "target": record["target"], 
                                 "relation": record["relation"], "attributes": record["attributes"]}
