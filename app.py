@@ -11,6 +11,7 @@ import logging
 from typing import Dict, Any, List, Optional
 from pathlib import Path
 from contextlib import asynccontextmanager
+from datetime import datetime
 
 from fastapi import FastAPI, HTTPException, UploadFile, File, Form
 from fastapi.responses import JSONResponse, StreamingResponse, FileResponse
@@ -562,6 +563,12 @@ async def health_check():
             "status": "unhealthy",
             "error": str(e)
         }
+
+
+@app.get("/ping")
+async def ping():
+    """Lightweight ping endpoint for keep-alive purposes."""
+    return {"status": "alive", "timestamp": datetime.now().isoformat()}
 
 
 # Rate limiting endpoints
