@@ -384,7 +384,7 @@ async def get_graph_data():
                     MATCH (n) 
                     RETURN n.name as name, 
                            n.type as type, 
-                           CASE WHEN EXISTS(n.attributes) THEN n.attributes ELSE {} END as attributes
+                           CASE WHEN n.attributes IS NOT NULL THEN n.attributes ELSE {} END as attributes
                 """)
                 nodes = [{"name": record["name"], "type": record["type"], "attributes": record["attributes"]} 
                         for record in nodes_result]
@@ -395,7 +395,7 @@ async def get_graph_data():
                     RETURN source.name as source, 
                            target.name as target, 
                            r.relation_type as relation, 
-                           CASE WHEN EXISTS(r.attributes) THEN r.attributes ELSE {} END as attributes
+                           CASE WHEN r.attributes IS NOT NULL THEN r.attributes ELSE {} END as attributes
                 """)
                 relationships = [{"source": record["source"], "target": record["target"], 
                                 "relation": record["relation"], "attributes": record["attributes"]}
