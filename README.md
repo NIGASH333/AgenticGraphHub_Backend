@@ -315,6 +315,333 @@ Run the comprehensive test suite:
 python test_advanced_features.py
 ```
 
+## Rate Limiting & API Protection
+
+The system includes comprehensive rate limiting to protect against API abuse, cost overruns, and ensure fair usage. The rate limiter implements multiple strategies for robust protection.
+
+### 🛡️ Rate Limiting Features
+
+- **Multi-tier Protection**: Per-minute, per-hour, and per-day limits
+- **Token-based Limits**: Tracks OpenAI API token usage and costs
+- **Burst Protection**: Prevents rapid-fire requests
+- **Cost Monitoring**: Tracks and limits daily API costs
+- **User Identification**: IP-based and API key-based user tracking
+- **Exempt Paths**: Health checks and documentation endpoints are exempt
+- **Real-time Headers**: Rate limit status in HTTP response headers
+
+### 📊 Rate Limit Configuration
+
+Default limits (configurable in `rate_limiter.py`):
+
+| Limit Type | Default Value | Description |
+|------------|---------------|-------------|
+| **Per Minute** | 10 requests, 50K tokens | Prevents burst abuse |
+| **Per Hour** | 100 requests, 200K tokens | Hourly usage control |
+| **Per Day** | 1000 requests, 1M tokens | Daily usage limits |
+| **Daily Cost** | $10.00 USD | Cost protection |
+| **Burst Window** | 5 requests in 10 seconds | Immediate burst protection |
+
+### 🔧 Rate Limiter Components
+
+#### 1. **RateLimiter Class** (`rate_limiter.py`)
+Core rate limiting logic with multiple protection layers:
+
+```python
+# Check rate limits before processing
+allowed, reason, status_info = await rate_limiter.check_rate_limit(
+    user_id="ip:192.168.1.1",
+    estimated_tokens=1000,
+    model='gpt-3.5-turbo'
+)
+```
+
+#### 2. **RateLimitMiddleware** (`rate_limit_middleware.py`)
+ASGI middleware for automatic rate limiting:
+
+```python
+# Applied to all endpoints except exempt paths
+app.add_middleware(
+    RateLimitMiddleware,
+    exempt_paths=['/health', '/docs', '/openapi.json']
+)
+```
+
+#### 3. **User Identification Methods**
+Multiple ways to identify users:
+
+- **IP-based**: `ip:192.168.1.1`
+- **API Key**: `api_key:your_api_key`
+- **Auth Token**: `auth:bearer_token`
+
+### 📈 Rate Limit Monitoring
+
+#### Check Global Statistics
+```bash
+curl -X GET "http://localhost:8000/rate-limit/status"
+```
+
+Response:
+```json
+{
+  "status": "success",
+  "data": {
+    "total_users": 15,
+    "active_users": 3,
+    "total_requests_today": 245,
+    "total_tokens_today": 125000,
+    "total_cost_today": 1.25,
+    "config": {
+      "requests_per_minute": 10,
+      "requests_per_hour": 100,
+      "requests_per_day": 1000,
+      "tokens_per_minute": 50000,
+      "tokens_per_hour": 200000,
+      "tokens_per_day": 1000000,
+      "cost_per_day": 10.0
+    }
+  }
+}
+```
+
+#### Check User-Specific Status
+```bash
+curl -X GET "http://localhost:8000/rate-limit/user/ip:192.168.1.1"
+```
+
+Response:
+```json
+{
+  "status": "success",
+  "data": {
+    "requests_this_minute": 3,
+    "requests_this_hour": 15,
+    "requests_this_day": 45,
+    "tokens_this_minute": 5000,
+    "tokens_this_hour": 25000,
+    "tokens_this_day": 75000,
+    "cost_this_day": 0.75,
+    "last_request": 1703123456.789,
+    "limits": {
+      "requests_per_minute": 10,
+      "requests_per_hour": 100,
+      "requests_per_day": 1000,
+      "tokens_per_minute": 50000,
+      "tokens_per_hour": 200000,
+      "tokens_per_day": 1000000,
+      "cost_per_day": 10.0
+    }
+  }
+}
+```
+
+### 🚫 Rate Limit Responses
+
+When limits are exceeded, the API returns:
+
+**HTTP Status**: `429 Too Many Requests`
+
+**Response Body**:
+```json
+{
+  "error": "Rate limit exceeded",
+  "message": "Rate limit exceeded: too many requests or tokens per minute.",
+  "retry_after": 60,
+  "status_info": {
+    "requests_this_minute": 10,
+    "requests_this_hour": 45,
+    "tokens_this_minute": 50000,
+    "cost_this_day": 2.50
+  }
+}
+```
+
+**Response Headers**:
+```
+X-RateLimit-Limit: 10
+X-RateLimit-Remaining: 0
+X-RateLimit-Reset: 1703123600
+X-RateLimit-Status: exceeded
+```
+
+### ⚙️ Configuration & Customization
+
+#### 1. **Modify Rate Limits**
+Edit `rate_limiter.py`:
+
+```python
+@dataclass
+class RateLimitConfig:
+    # Adjust these values for your needs
+    requests_per_minute: int = 20      # Increase for higher traffic
+    tokens_per_minute: int = 100000    # Increase for larger requests
+    requests_per_hour: int = 200       # Hourly limit
+    tokens_per_hour: int = 500000      # Hourly token limit
+    requests_per_day: int = 2000       # Daily limit
+    tokens_per_day: int = 2000000      # Daily token limit
+    cost_per_day: float = 20.0         # Daily cost limit in USD
+    max_burst_requests: int = 10       # Burst protection
+    burst_window_seconds: int = 15     # Burst window
+```
+
+#### 2. **Custom User Identification**
+Create custom user ID extraction:
+
+```python
+def get_user_id_from_custom_header(request: Request) -> str:
+    """Extract user ID from custom header."""
+    user_id = request.headers.get("X-User-ID")
+    if user_id:
+        return f"user:{user_id}"
+    
+    # Fallback to IP
+    return f"ip:{request.client.host}"
+
+# Apply custom identification
+app.add_middleware(
+    RateLimitMiddleware,
+    get_user_id=get_user_id_from_custom_header,
+    exempt_paths=['/health', '/docs', '/openapi.json']
+)
+```
+
+#### 3. **Exempt Additional Paths**
+Add more exempt paths:
+
+```python
+app.add_middleware(
+    RateLimitMiddleware,
+    exempt_paths=[
+        '/health', 
+        '/docs', 
+        '/openapi.json',
+        '/graph/stats',
+        '/vector/stats',
+        '/admin/metrics'  # Add custom exempt paths
+    ]
+)
+```
+
+### 🔄 Admin Functions
+
+#### Reset User Rate Limits
+```bash
+# Reset limits for a specific user (admin function)
+curl -X POST "http://localhost:8000/rate-limit/reset/ip:192.168.1.1"
+```
+
+#### Monitor Rate Limit Health
+```bash
+# Check if rate limiting is working
+curl -X GET "http://localhost:8000/health"
+```
+
+### 🎯 Best Practices
+
+#### 1. **Production Configuration**
+For production environments:
+
+```python
+# More restrictive limits for production
+RateLimitConfig(
+    requests_per_minute=5,      # Conservative
+    tokens_per_minute=25000,    # Lower token limit
+    requests_per_hour=50,       # Hourly limit
+    tokens_per_hour=100000,     # Hourly tokens
+    requests_per_day=500,      # Daily limit
+    tokens_per_day=500000,     # Daily tokens
+    cost_per_day=5.0,          # Lower cost limit
+    max_burst_requests=3,      # Strict burst protection
+    burst_window_seconds=10    # Shorter burst window
+)
+```
+
+#### 2. **Monitoring & Alerting**
+Set up monitoring for rate limit violations:
+
+```python
+# Add logging for rate limit violations
+import logging
+logger = logging.getLogger(__name__)
+
+# In your application
+if not allowed:
+    logger.warning(f"Rate limit exceeded for {user_id}: {reason}")
+    # Send alert to monitoring system
+    send_alert(f"Rate limit exceeded: {reason}")
+```
+
+#### 3. **Graceful Degradation**
+Handle rate limits gracefully in client applications:
+
+```python
+import requests
+import time
+
+def make_request_with_retry(url, data, max_retries=3):
+    for attempt in range(max_retries):
+        try:
+            response = requests.post(url, json=data)
+            
+            if response.status_code == 429:
+                # Rate limited - wait and retry
+                retry_after = int(response.headers.get('X-RateLimit-Reset', 60))
+                time.sleep(retry_after)
+                continue
+                
+            return response.json()
+            
+        except Exception as e:
+            if attempt == max_retries - 1:
+                raise e
+            time.sleep(2 ** attempt)  # Exponential backoff
+```
+
+### 🚨 Troubleshooting Rate Limits
+
+#### Common Issues:
+
+1. **"Rate limit exceeded" errors**:
+   - Check current usage: `GET /rate-limit/status`
+   - Wait for limits to reset
+   - Consider increasing limits if legitimate usage
+
+2. **High token usage**:
+   - Optimize prompts to reduce token count
+   - Use smaller models for simple tasks
+   - Implement request batching
+
+3. **Cost overruns**:
+   - Monitor daily costs via API
+   - Set lower cost limits
+   - Use cheaper models when possible
+
+#### Debug Rate Limiting:
+```bash
+# Check if rate limiting is active
+curl -X GET "http://localhost:8000/rate-limit/status"
+
+# Check specific user
+curl -X GET "http://localhost:8000/rate-limit/user/ip:127.0.0.1"
+
+# Test with a request to see headers
+curl -X POST "http://localhost:8000/query" \
+  -H "Content-Type: application/json" \
+  -d '{"query": "test"}' \
+  -v  # Shows response headers including rate limit info
+```
+
+### 📊 Rate Limit Analytics
+
+The system provides comprehensive analytics:
+
+- **User Activity**: Track individual user usage patterns
+- **Cost Analysis**: Monitor API costs and spending trends
+- **Peak Usage**: Identify high-traffic periods
+- **Violation Tracking**: Monitor rate limit violations
+- **Performance Impact**: Measure rate limiting overhead
+
+Access analytics via the monitoring endpoints or integrate with external monitoring systems.
+
 ## Production Deployment
 
 ### Docker Deployment
@@ -692,6 +1019,7 @@ For issues and questions:
 
 ## Future Enhancements
 
+- [ ] Advanced graph visualization
 - [ ] Multi-language support
 - [ ] Caching layer for improved performance
 - [ ] Authentication and authorization
@@ -707,4 +1035,3 @@ All Rights Reserved.
 
 Unauthorized copying, modification, distribution, or use of this software,
 via any medium, is strictly prohibited without the express permission of the author.
-
