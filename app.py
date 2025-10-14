@@ -26,6 +26,7 @@ from agent import RetrievalAgent
 from entity_deduplication import EntityDeduplicator
 from query_generator import QueryGenerator
 from advanced_reasoning import AdvancedReasoningEngine
+from rate_limit_middleware import RateLimitMiddleware
 
 # Load environment variables
 load_dotenv()
@@ -117,6 +118,12 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+)
+
+# Add rate limiting middleware
+app.add_middleware(
+    RateLimitMiddleware,
+    exempt_paths=['/health', '/docs', '/openapi.json', '/graph/stats', '/vector/stats']
 )
 
 # Mount static files for frontend
@@ -548,6 +555,52 @@ async def health_check():
             "status": "unhealthy",
             "error": str(e)
         }
+
+
+# Rate limiting endpoints
+@app.get("/rate-limit/status")
+async def get_rate_limit_status():
+    """Get current rate limiting status and configuration."""
+    try:
+        from rate_limiter import rate_limiter
+        stats = await rate_limiter.get_global_stats()
+        return {
+            "status": "success",
+            "data": stats
+        }
+    except Exception as e:
+        logger.error(f"Error getting rate limit status: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/rate-limit/user/{user_id}")
+async def get_user_rate_limit_status(user_id: str):
+    """Get rate limiting status for a specific user."""
+    try:
+        from rate_limiter import rate_limiter
+        status_info = await rate_limiter.get_user_status(user_id)
+        return {
+            "status": "success",
+            "data": status_info
+        }
+    except Exception as e:
+        logger.error(f"Error getting user rate limit status: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/rate-limit/reset/{user_id}")
+async def reset_user_rate_limits(user_id: str):
+    """Reset rate limits for a specific user (admin function)."""
+    try:
+        from rate_limiter import rate_limiter
+        await rate_limiter.reset_user_limits(user_id)
+        return {
+            "status": "success",
+            "message": f"Rate limits reset for user: {user_id}"
+        }
+    except Exception as e:
+        logger.error(f"Error resetting user rate limits: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 if __name__ == "__main__":
