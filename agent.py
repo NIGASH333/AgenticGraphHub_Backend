@@ -122,7 +122,7 @@ accurate, and helpful responses based on the retrieved information.
             WHERE any(word IN $query_words WHERE toLower(e.name) CONTAINS word)
             RETURN e.name as name, 
                    e.type as type, 
-                   CASE WHEN EXISTS(e.attributes) THEN e.attributes ELSE {} END as attributes
+                   CASE WHEN e.attributes IS NOT NULL THEN e.attributes ELSE {} END as attributes
             LIMIT 10
             """
             
@@ -144,7 +144,7 @@ accurate, and helpful responses based on the retrieved information.
                 RETURN source.name as source, 
                        target.name as target, 
                        r.relation_type as relation, 
-                       CASE WHEN EXISTS(r.attributes) THEN r.attributes ELSE {} END as attributes
+                       CASE WHEN r.attributes IS NOT NULL THEN r.attributes ELSE {} END as attributes
                 LIMIT 20
                 """
                 
