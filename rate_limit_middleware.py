@@ -51,11 +51,20 @@ class RateLimitMiddleware:
         
         return f"ip:{client_ip}"
     
-    async def __call__(self, request: Request, call_next):
-        """Apply rate limiting to the request."""
+    async def __call__(self, scope, receive, send):
+        """Apply rate limiting to the request using ASGI protocol."""
+        if scope["type"] != "http":
+            await self.app(scope, receive, send)
+            return
+        
+        # Create a request object to work with
+        from starlette.requests import Request
+        request = Request(scope, receive)
+        
         # Skip rate limiting for exempt paths
         if request.url.path in self.exempt_paths:
-            return await call_next(request)
+            await self.app(scope, receive, send)
+            return
         
         # Get user identifier
         try:
@@ -78,44 +87,56 @@ class RateLimitMiddleware:
             if not allowed:
                 logger.warning(f"Rate limit exceeded for user {user_id}: {reason}")
                 
-                # Add rate limit headers
-                headers = {
-                    "X-RateLimit-Limit": str(rate_limiter.config.requests_per_minute),
-                    "X-RateLimit-Remaining": "0",
-                    "X-RateLimit-Reset": str(int(time.time() + 60)),
-                    "X-RateLimit-Status": "exceeded"
+                # Create rate limit response
+                response_data = {
+                    "error": "Rate limit exceeded",
+                    "message": reason,
+                    "retry_after": 60,
+                    "status_info": status_info
                 }
                 
-                return JSONResponse(
-                    status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-                    content={
-                        "error": "Rate limit exceeded",
-                        "message": reason,
-                        "retry_after": 60,
-                        "status_info": status_info
-                    },
-                    headers=headers
-                )
+                # Send rate limit response
+                await send({
+                    "type": "http.response.start",
+                    "status": status.HTTP_429_TOO_MANY_REQUESTS,
+                    "headers": [
+                        [b"content-type", b"application/json"],
+                        [b"x-ratelimit-limit", str(rate_limiter.config.requests_per_minute).encode()],
+                        [b"x-ratelimit-remaining", b"0"],
+                        [b"x-ratelimit-reset", str(int(time.time() + 60)).encode()],
+                        [b"x-ratelimit-status", b"exceeded"]
+                    ]
+                })
+                
+                import json
+                await send({
+                    "type": "http.response.body",
+                    "body": json.dumps(response_data).encode()
+                })
+                return
             
-            # Add rate limit headers for successful requests
-            response = await call_next(request)
+            # If rate limit check passes, continue with the request
+            # We need to create a custom send function to add headers to the response
+            async def send_with_headers(message):
+                if message["type"] == "http.response.start":
+                    # Add rate limit headers
+                    headers = list(message.get("headers", []))
+                    headers.extend([
+                        [b"x-ratelimit-limit", str(rate_limiter.config.requests_per_minute).encode()],
+                        [b"x-ratelimit-remaining", str(max(0, rate_limiter.config.requests_per_minute - status_info["requests_this_minute"])).encode()],
+                        [b"x-ratelimit-reset", str(int(time.time() + 60)).encode()],
+                        [b"x-ratelimit-status", b"ok"]
+                    ])
+                    message["headers"] = headers
+                
+                await send(message)
             
-            headers = {
-                "X-RateLimit-Limit": str(rate_limiter.config.requests_per_minute),
-                "X-RateLimit-Remaining": str(max(0, rate_limiter.config.requests_per_minute - status_info["requests_this_minute"])),
-                "X-RateLimit-Reset": str(int(time.time() + 60)),
-                "X-RateLimit-Status": "ok"
-            }
-            
-            for key, value in headers.items():
-                response.headers[key] = value
-            
-            return response
+            await self.app(scope, receive, send_with_headers)
             
         except Exception as e:
             logger.error(f"Rate limiting error: {e}")
             # If rate limiting fails, allow the request but log the error
-            return await call_next(request)
+            await self.app(scope, receive, send)
     
     def _estimate_tokens(self, request: Request) -> int:
         """Estimate token count for the request."""
