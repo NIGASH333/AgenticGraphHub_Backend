@@ -120,7 +120,9 @@ accurate, and helpful responses based on the retrieved information.
             entity_query = """
             MATCH (e:Entity)
             WHERE any(word IN $query_words WHERE toLower(e.name) CONTAINS word)
-            RETURN e.name as name, e.type as type, e.attributes as attributes
+            RETURN e.name as name, 
+                   e.type as type, 
+                   CASE WHEN EXISTS(e.attributes) THEN e.attributes ELSE {} END as attributes
             LIMIT 10
             """
             
@@ -139,8 +141,10 @@ accurate, and helpful responses based on the retrieved information.
                 rel_query = """
                 MATCH (source:Entity)-[r:RELATION]->(target:Entity)
                 WHERE source.name IN $entity_names OR target.name IN $entity_names
-                RETURN source.name as source, target.name as target, 
-                       r.relation_type as relation, r.attributes as attributes
+                RETURN source.name as source, 
+                       target.name as target, 
+                       r.relation_type as relation, 
+                       CASE WHEN EXISTS(r.attributes) THEN r.attributes ELSE {} END as attributes
                 LIMIT 20
                 """
                 
@@ -347,6 +351,9 @@ Be specific and cite relevant entities or relationships when possible.
             # Generate answer
             answer = self.generate_answer(query, retrieval_results, retrieval_mode)
             
+            # Calculate confidence based on retrieval quality and answer completeness
+            confidence = self._calculate_confidence(query, retrieval_results, answer, retrieval_mode)
+            
             # Prepare response
             response = {
                 "query": query,
@@ -354,7 +361,8 @@ Be specific and cite relevant entities or relationships when possible.
                 "sources": self._get_sources_used(retrieval_mode, retrieval_results),
                 "answer": answer,
                 "metadata": {
-                    "retrieval_results": retrieval_results
+                    "retrieval_results": retrieval_results,
+                    "confidence": confidence
                 }
             }
             
@@ -370,6 +378,95 @@ Be specific and cite relevant entities or relationships when possible.
                 "metadata": {"error": str(e)}
             }
     
+    def _calculate_confidence(self, query: str, retrieval_results: Dict[str, Any], 
+                             answer: str, retrieval_mode: str) -> float:
+        """
+        Calculate confidence score based on retrieval quality and answer completeness.
+        
+        Args:
+            query: Original user query
+            retrieval_results: Results from retrieval process
+            answer: Generated answer
+            retrieval_mode: Type of retrieval used
+            
+        Returns:
+            Confidence score between 0.0 and 1.0
+        """
+        try:
+            confidence_factors = []
+            
+            # Factor 1: Retrieval result quality
+            if retrieval_mode == "graph":
+                entities = retrieval_results.get("entities", [])
+                relationships = retrieval_results.get("relationships", [])
+                
+                # More entities and relationships = higher confidence
+                entity_score = min(len(entities) / 5.0, 1.0)  # Cap at 1.0
+                rel_score = min(len(relationships) / 3.0, 1.0)
+                retrieval_quality = (entity_score + rel_score) / 2
+                confidence_factors.append(retrieval_quality)
+                
+            elif retrieval_mode == "vector":
+                chunks = retrieval_results.get("chunks", [])
+                # More relevant chunks = higher confidence
+                chunk_score = min(len(chunks) / 3.0, 1.0)
+                confidence_factors.append(chunk_score)
+                
+            else:  # hybrid
+                graph_entities = retrieval_results.get("graph_entities", [])
+                vector_chunks = retrieval_results.get("vector_chunks", [])
+                
+                graph_score = min(len(graph_entities) / 5.0, 1.0)
+                vector_score = min(len(vector_chunks) / 3.0, 1.0)
+                hybrid_score = (graph_score + vector_score) / 2
+                confidence_factors.append(hybrid_score)
+            
+            # Factor 2: Answer completeness
+            answer_length = len(answer.split())
+            query_length = len(query.split())
+            
+            # Longer answers relative to query = higher confidence (up to a point)
+            completeness_score = min(answer_length / (query_length * 3), 1.0)
+            confidence_factors.append(completeness_score)
+            
+            # Factor 3: Answer quality indicators
+            quality_indicators = 0
+            if "I don't know" not in answer.lower() and "unable to" not in answer.lower():
+                quality_indicators += 1
+            if "error" not in answer.lower():
+                quality_indicators += 1
+            if len(answer) > 50:  # Substantial answer
+                quality_indicators += 1
+            if any(word in answer.lower() for word in ["because", "due to", "since", "therefore"]):
+                quality_indicators += 1  # Shows reasoning
+                
+            quality_score = quality_indicators / 4.0
+            confidence_factors.append(quality_score)
+            
+            # Factor 4: Query complexity vs retrieval success
+            query_complexity = len(query.split()) / 10.0  # Normalize by word count
+            if retrieval_mode == "hybrid":
+                complexity_bonus = 0.1  # Hybrid is more sophisticated
+            else:
+                complexity_bonus = 0.0
+                
+            complexity_score = min(query_complexity + complexity_bonus, 1.0)
+            confidence_factors.append(complexity_score)
+            
+            # Calculate weighted average
+            weights = [0.4, 0.3, 0.2, 0.1]  # Retrieval quality, completeness, quality, complexity
+            weighted_confidence = sum(w * f for w, f in zip(weights, confidence_factors))
+            
+            # Ensure confidence is between 0.1 and 0.95
+            final_confidence = max(0.1, min(0.95, weighted_confidence))
+            
+            logger.info(f"Confidence calculation: factors={confidence_factors}, final={final_confidence:.2f}")
+            return round(final_confidence, 2)
+            
+        except Exception as e:
+            logger.error(f"Error calculating confidence: {e}")
+            return 0.5  # Default fallback confidence
+
     def _get_sources_used(self, retrieval_mode: str, retrieval_results: Dict[str, Any]) -> List[str]:
         """Determine which sources were used for retrieval."""
         sources = []
