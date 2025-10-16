@@ -1,5 +1,5 @@
 """
-FastAPI Application for the RAG system
+FastAPI Application for the RAG system with Keep-Alive Background Task
 
 Main API endpoints for the Agentic Graph RAG service.
 TODO: Add authentication, rate limiting, better error handling
@@ -8,6 +8,8 @@ TODO: Add authentication, rate limiting, better error handling
 import os
 import json
 import logging
+import asyncio
+import aiohttp
 from typing import Dict, Any, List, Optional
 from pathlib import Path
 from contextlib import asynccontextmanager
@@ -44,11 +46,48 @@ entity_deduplicator = None
 query_generator = None
 reasoning_engine = None
 
+# Keep-alive task management
+keep_alive_task = None
+KEEP_ALIVE_INTERVAL = 300  # Ping every 5 minutes (adjust as needed)
+
+
+async def keep_alive_worker(app_url: str):
+    """
+    Background task that pings the server periodically to prevent it from sleeping.
+    
+    Args:
+        app_url: The URL of the application to ping
+    """
+    logger.info(f"Starting keep-alive worker. Will ping {app_url}/ping every {KEEP_ALIVE_INTERVAL} seconds")
+    
+    while True:
+        try:
+            await asyncio.sleep(KEEP_ALIVE_INTERVAL)
+            
+            async with aiohttp.ClientSession() as session:
+                try:
+                    async with session.get(f"{app_url}/ping", timeout=aiohttp.ClientTimeout(total=10)) as resp:
+                        if resp.status == 200:
+                            logger.debug(f"Keep-alive ping successful: {await resp.json()}")
+                        else:
+                            logger.warning(f"Keep-alive ping returned status {resp.status}")
+                except asyncio.TimeoutError:
+                    logger.warning("Keep-alive ping timed out")
+                except Exception as e:
+                    logger.error(f"Error during keep-alive ping: {e}")
+                    
+        except asyncio.CancelledError:
+            logger.info("Keep-alive worker stopped")
+            break
+        except Exception as e:
+            logger.error(f"Unexpected error in keep-alive worker: {e}")
+            await asyncio.sleep(10)  # Wait before retrying
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application lifespan manager for startup and shutdown."""
-    global graph_builder, vector_store, retrieval_agent, entity_deduplicator, query_generator, reasoning_engine
+    global graph_builder, vector_store, retrieval_agent, entity_deduplicator, query_generator, reasoning_engine, keep_alive_task
     
     # Startup
     logger.info("Starting RAG Service...")
@@ -92,6 +131,19 @@ async def lifespan(app: FastAPI):
         
         logger.info("All components initialized successfully")
         
+        # Start keep-alive task
+        app_host = os.getenv("APP_HOST", "localhost")
+        app_port = int(os.getenv("APP_PORT", 8000))
+        
+        # Determine if we're in a cloud environment
+        if os.getenv("RENDER") or os.getenv("HEROKU") or os.getenv("RAILWAY"):
+            # Use the deployed URL if available
+            app_url = os.getenv("APP_URL") or f"http://{app_host}:{app_port}"
+            keep_alive_task = asyncio.create_task(keep_alive_worker(app_url))
+            logger.info(f"Keep-alive task started for {app_url}")
+        else:
+            logger.info("Running in local environment - keep-alive task disabled")
+        
     except Exception as e:
         logger.error(f"Failed to initialize components: {e}")
         raise
@@ -100,6 +152,15 @@ async def lifespan(app: FastAPI):
     
     # Shutdown
     logger.info("Shutting down RAG Service...")
+    
+    # Cancel keep-alive task
+    if keep_alive_task:
+        keep_alive_task.cancel()
+        try:
+            await keep_alive_task
+        except asyncio.CancelledError:
+            logger.info("Keep-alive task cancelled")
+    
     if graph_builder:
         graph_builder.close()
 
@@ -124,7 +185,7 @@ app.add_middleware(
 # Add rate limiting middleware
 app.add_middleware(
     RateLimitMiddleware,
-    exempt_paths=['/health', '/docs', '/openapi.json', '/graph/stats', '/vector/stats']
+    exempt_paths=['/health', '/docs', '/openapi.json', '/graph/stats', '/vector/stats', '/ping']
 )
 
 # Mount static files for frontend
